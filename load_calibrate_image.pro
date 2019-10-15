@@ -107,6 +107,7 @@ IF channel_guess NE channel THEN PRINT,"Warning: Input channel type doesn't seem
 
 ; if wavelength isn't set, determine it from the FITS header information
 IF NOT keyword_set(wavelength_nb) THEN wavelength_nb = ROUND(sxpar(image_hdr, 'WAVELNTH'))
+rel_wave_nb = sxpar(image_hdr, 'REL_WAVE')
 
 ; get calibration information from external function
 ; date_str is actually ignored, so it doesn't matter
@@ -135,13 +136,17 @@ dark_file_valid = FILE_TEST(dark_file_use)
 IF N_ELEMENTS(gain_file) EQ 1 THEN gain_file_use = gain_file ELSE gain_file_use = cal_params.gain_file
 gain_name = cal_params.gain_name
 IF channel_id EQ 'nb' THEN BEGIN
-    gain_waves     = FIX(cal_params.gain_name[1,*])
-    gain_idx       = get_closest(gain_waves, wavelength_nb)
+    gain_filter_id = FIX(cal_params.gain_name[1,*])
+    gain_idx       = get_closest(gain_filter_id, wavelength_nb)
+
     gain_file_use  = gain_file_use[0, gain_idx]
     
-    gain_waves     = FIX(cal_params.gain_name[1,*])
-    gain_idx       = get_closest(gain_waves, wavelength_nb)
     gain_name      = cal_params.gain_name[0, gain_idx]
+    gain_info      = cal_params.gain_name[2, gain_idx]
+    filt_diff      = ABS(cal_params.gain_name[1, gain_idx] - wavelength_nb)
+    IF (filt_diff GE 5) AND (verbose GE 1) THEN $
+        print,wavelength_nb,cal_params.gain_name[1, gain_idx],$
+            format='("Warning: Image wavelength (", I4.4, ") and filter calibration wavelength (", I4.4, ") mismatch!")'
 ENDIF
 IF FILE_TEST(cal_directory) THEN gain_file_use = cal_directory + '/' + gain_file_use
 gain_file_valid = FILE_TEST(gain_file_use)
@@ -161,14 +166,27 @@ bad_pixel_file_valid = FILE_TEST(bad_pixel_file)
 
 ; restore identified calibration files
 IF verbose GE 2 THEN PRINT,'Restoring Dark Calibration File: ' + dark_file_use
-RESTORE,Verbose=restore_verbose,dark_file_use
-IF verbose GE 2 THEN PRINT,'Restoring Gain Calibration File: ' + gain_file_use
 RESTORE,Verbose=restore_verbose,gain_file_use
 
 ; set defined calibration array to a common name
-res = EXECUTE('dark_cal = ' + dark_name[0])
+res = EXECUTE('dark_cal  = ' + dark_name[0])
 res = EXECUTE('gain_cal = ' + gain_name[0])
 
+IF channel_id EQ 'nb' THEN BEGIN
+    res = EXECUTE('gain_info = ' + gain_info[0])
+    gain_waves = gain_info.wavelengths
+    gain_match = get_closest(gain_waves, rel_wave_nb)
+    gain_diff  = (gain_waves[gain_match] - rel_wave_nb)
+    IF (gain_diff GE 5) AND (verbose GE 1) THEN BEGIN 
+	print,rel_wave_nb,gain_waves[gain_match],$
+		format='("Warning: Image wavelength (", F8.3, ") and gain table wavelength (", F8.3, ") mismatch!")'
+    ENDIF ELSE IF (verbose GE 3) THEN BEGIN 
+	print,rel_wave_nb,gain_waves[gain_match],$
+		format='("Image wavelength : ", F8.3, " - Gain table wavelength : ", F8.3)'
+    ENDIF
+
+    gain_cal = gain_cal[*,*,gain_match]
+ENDIF
 ; apply dark and flat correction to data
 image_array = (image_array - dark_cal) / gain_cal
 
