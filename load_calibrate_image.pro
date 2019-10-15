@@ -1,6 +1,6 @@
 FUNCTION load_calibrate_image, filename, extension, channel, wavelength_nb=wavelength_nb, dark_file=dark_file, gain_file=gain_file, $
                                rotate_array=rotate_array, keep_size=keep_size, apply_distortion_map=apply_distortion_map, $
-                               cal_directory=cal_directory, target_scale=target_scale, $
+                               cal_directory=cal_directory, target_scale=target_scale,filter_fringe=filter_fringe, $
                                verbose=verbose, header_out=header_out, cal_info_out=cal_info_out
 
 ;+
@@ -36,6 +36,7 @@ FUNCTION load_calibrate_image, filename, extension, channel, wavelength_nb=wavel
 ;                        after rescaling [default = 1]
 ;     apply_distortion_map - apply destretch vectors to narrowband image to correct static optical distortions.
 ;                            typically only applies to narrowband images
+;     filter_fringe  - use filter_fringe_fft routine to remove wavelength-appropriate fringe pattern
 ;     cal_directory - directory path to calibration files, absolute or relative (e.g. 'calibration_files')
 ;     verbose       - determines what information is printed out during execution
 ;                     1 - prints rotation and shift values applied
@@ -68,6 +69,8 @@ IF N_ELEMENTS(keep_size) LE 0 THEN keep_size=1
 
 ; set up desired orientation and scale 
 IF NOT KEYWORD_SET(rotate_array) THEN rotate_array='solar_north'
+
+IF N_ELEMENTS(filter_fringe) LE 0 THEN filter_fringe=1
 
 IF NOT Keyword_Set(cal_directory) THEN BEGIN
     repository_location = File_Dirname(Routine_Filepath(/Either),/Mark)
@@ -153,6 +156,9 @@ IF gain_file_valid NE 1 THEN BEGIN
     gain_file_use  = gain_files[0]
 ENDIF
 
+bad_pixel_file       = cal_directory + '/' + cal_params.bad_pixel_file
+bad_pixel_file_valid = FILE_TEST(bad_pixel_file)
+
 ; restore identified calibration files
 IF verbose GE 2 THEN PRINT,'Restoring Dark Calibration File: ' + dark_file_use
 RESTORE,Verbose=restore_verbose,dark_file_use
@@ -166,6 +172,31 @@ res = EXECUTE('gain_cal = ' + gain_name[0])
 ; apply dark and flat correction to data
 image_array = (image_array - dark_cal) / gain_cal
 
+IF bad_pixel_file_valid THEN BEGIN
+    IF verbose GE 2 THEN PRINT,'Replacing bad pixels by local median'
+    badpix_idx = read_csv(bad_pixel_file)
+    badpix_idx = badpix_idx.field1
+    ; we want to apply a median filtering to the image to derive values
+    ; with which to replace the bad pixels. But IDL's MEDIAN function 
+    ; ignores the edges. So we expand the size of the image, creating
+    ; a "neutral" buffer, apply the median filter, and then trim the image down again.
+    image_array_big  = FLTARR(image_array_szx+20,image_array_szy+20)
+    image_array_big += MEAN(image_array)
+    image_array_big[10,10] = image_array
+    image_array_med  = MEDIAN(image_array_big,5)
+    image_array_med  = image_array_med[10:image_array_szx+9,10:image_array_szy+9]
+    image_array[badpix_idx] = image_array_med[badpix_idx]
+ENDIF
+
+IF Keyword_Set(filter_fringe) AND (channel_id EQ 'nb') THEN BEGIN
+    filter_list  = [6173, 6563, 7699, 8542]
+    filter_idx   = BYTARR(4)
+    match_filter = [MIN(ABS(filter_list - ROUND(wavelength_nb[0])),minpos),minpos]
+    filter_idx[match_filter[1]] = 1
+    IF verbose GE 2 THEN PRINT,'Applying fringe correction for: ' + STRTRIM(filter_list[match_filter[1]])
+    image_array = filter_fringe_fft(image_array,fe6173=filter_idx[0],halpha=filter_idx[1],$
+                                                k7699=filter_idx[2],ca8542=filter_idx[3])
+ENDIF
 ; rotate image to roughly match solar Cartesian coordinates (North up, East left)
 image_array = ROTATE(image_array,cal_params.transpose)
 
