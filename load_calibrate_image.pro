@@ -281,19 +281,53 @@ IF NOT Keyword_Set(no_interpolation) THEN BEGIN
 	ENDIF
 ENDIF ; skipped if no_interpolation 
 
-
 ; ----------------------------------------------------------------------
 ; remap to fixed, equal plate scale 
 ; ----------------------------------------------------------------------
-
 ; rescale image to desired, equal plate scale
 ; retrieve plate scale of loaded image (based on filter wavelength for narrowband data)
 IF channel_id EQ 'wl' THEN BEGIN
     plate_scale_im = cal_params.plate_scale[0:1]
-    image_shift    = cal_params.optical_shift 
+    image_shift    = cal_params.optical_shift
+ENDIF ELSE BEGIN
+    ; filter_idx_select = where(fix(cal_params.plate_scale[2,*])  eq wavelength)
+    filter_idx_select = get_closest(cal_params.plate_scale[2,*],wavelength_nb)
+    plate_scale_im = cal_params.plate_scale[0:1, filter_idx_select]
+
     filter_idx_select = get_closest(cal_params.optical_shift[2,*],wavelength_nb)
     image_shift       = cal_params.optical_shift[0:1, filter_idx_select]
 ENDELSE
+
+IF NOT Keyword_Set(no_interpolation) THEN BEGIN
+    ; determine appropriate (pixel) size of output image to achieve the desired spatial scale
+    target_scale_ratio = plate_scale_im / target_scale
+    target_scale_pixel = ROUND([image_array_szx,image_array_szy] * target_scale_ratio)
+    target_scale_diff  = target_scale_pixel - [image_array_szx,image_array_szy]
+    image_array        = CONGRID(image_array, target_scale_pixel[0], target_scale_pixel[1], CUBIC=-0.5)
+
+    ; image size will typically change following rescaling
+    ; place the rescaled image in an array the same size as the input array,
+    ; either through trimming or adding a border.
+    ; this seems to be a complicated approach, but it appears to work
+    IF KEYWORD_SET(keep_size) THEN BEGIN
+
+        pix_rangex_arr = [0,target_scale_pixel[0] - 1]
+        pix_rangex_out = [0,image_array_szx-1]
+        IF target_scale_diff[0] GT 0 THEN pix_rangex_arr = [ROUND( target_scale_diff[0]/2.), ROUND( target_scale_diff[0]/2.) + image_array_szx-1]
+        IF target_scale_diff[0] LT 0 THEN pix_rangex_out = [ROUND(-target_scale_diff[0]/2.), ROUND(-target_scale_diff[0]/2.) + target_scale_pixel[0] -1]
+
+        pix_rangey_arr = [0,target_scale_pixel[1] - 1]
+        pix_rangey_out = [0,image_array_szy-1]
+        IF target_scale_diff[1] GT 0 THEN pix_rangey_arr = [ROUND( target_scale_diff[1]/2.), ROUND( target_scale_diff[1]/2.) + image_array_szy-1]
+        IF target_scale_diff[1] LT 0 THEN pix_rangey_out = [ROUND(-target_scale_diff[1]/2.), ROUND(-target_scale_diff[1]/2.) + target_scale_pixel[1] -1]
+
+        image_array_keep = FLTARR(image_array_szx, image_array_szy) + MEDIAN(image_array)
+        image_array_keep[pix_rangex_out[0]:pix_rangex_out[1],pix_rangey_out[0]:pix_rangey_out[1]] = $
+            image_array[pix_rangex_arr[0]:pix_rangex_arr[1],pix_rangey_arr[0]:pix_rangey_arr[1]]
+        image_array = image_array_keep
+    ENDIF
+    
+ENDIF ; skipped if no_interpolation
 
 ; ----------------------------------------------------------------------
 ; apply optical distortion correction 
