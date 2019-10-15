@@ -38,16 +38,22 @@ ENDELSE
     nb_dark_name          = 'nb_darks'
 
     nb_6173_gain_cal_file = ['Fe6173.gain.blueshift.info.20181220_165244.sav', '6173']
-    nb_6173_gain_cal_name = ['nb_gain_1652', '6173']
+    nb_6173_gain_cal_name = ['nb_gain_6173', '6173', 'nb_gain_info_6173']
+
     nb_7699_gain_cal_file = ['K7699.gain.blueshift.info.20181220_194457.sav', '7699']
-    nb_7699_gain_cal_name = ['nb_gain_1944', '7699']
+    nb_7699_gain_cal_name = ['nb_gain_7699', '7699', 'nb_gain_info_7699'
+]
     nb_6563_gain_cal_file = ['Halpha.gain.blueshift.info.20181220_194457.sav', '6563']
-    nb_6563_gain_cal_name = ['nb_gain_1944', '6563']
+    nb_6563_gain_cal_name = ['nb_gain_6563', '6563', 'nb_gain_info_6563'
+]
     nb_8542_gain_cal_file = ['Ca8542.gain.blueshift.info.20181220_161321.sav', '8542']
-    nb_8542_gain_cal_name = ['nb_gain_1613', '8542']
+    nb_8542_gain_cal_name = ['nb_gain_8542', '8542', 'nb_gain_info_8542']
 
     nb_gain_cal_file      = [[nb_6173_gain_cal_file], [nb_6563_gain_cal_file], [nb_7699_gain_cal_file], [nb_8542_gain_cal_file]]
     nb_gain_name          = [[nb_6173_gain_cal_name], [nb_6563_gain_cal_name], [nb_7699_gain_cal_name], [nb_8542_gain_cal_name]]
+
+    nb_bad_pixel_file      = 'narrowband.bad.pixel.index.txt'
+    wl_bad_pixel_file      = 'whitelight.bad.pixel.index.txt'
 
     ;pick a reference time for some time-dependent values
     ; typically pick the time of midnight before the start of the observations
@@ -154,11 +160,11 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
     wl_to_nb_drift          = [0,0]
     wl_to_nb_drift          = REFORM(wl_to_nb_drift, 2, 1)
 
-    PRINT,FILE_TEST(FILE_SEARCH(calibration_location, 'atmospheric.dispersion.calc.20Dec2018.sav'),/Read)
+    found_atm_disp_file = FILE_TEST(FILE_SEARCH(calibration_location, 'atmospheric.dispersion.calc.20Dec2018.sav'),/Read)		
     IF STRLOWCASE(instrument_channel) EQ 'ibis_nb' THEN BEGIN
         atm_dispersion_file = (FILE_SEARCH(calibration_location, 'atmospheric.dispersion.calc.20Dec2018.sav'))[0]
         IF FILE_TEST(atm_dispersion_file,/Read) THEN BEGIN
-            RESTORE,Verbose=1,atm_dispersion_file
+            RESTORE,Verbose=0,atm_dispersion_file
             ; provides ATM_DISP_CALC and SEQUENCE_TIMES
 
             ; pull out refraction values decomposed into x- and y-shifts (in solar heliocent ric coordinates)
@@ -184,6 +190,9 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
         ENDIF ELSE BEGIN
             num_timesteps              = 300
             atm_dispersion_nb          = FLTARR(3,2,num_filters)
+            FOR filtn = 0,num_filters-1 DO BEGIN & 
+                atm_dispersion_nb[2,*,filtn] = FLOAT(filter_ids[filters_used[filtn]]) & 
+                ENDFOR
             atm_dispersion_times       = [time_ref, time_ref+1]
         ENDELSE
         wl_optical_drifts       = FLTARR(2,num_timesteps)
@@ -228,7 +237,8 @@ CASE STRLOWCASE(instrument_channel) OF
                                     'dark_file',          wl_dark_cal_file, $
                                     'dark_name',          wl_dark_name, $
                                     'gain_file',          wl_gain_cal_file, $
-                                    'gain_name',          wl_gain_name)
+                                    'gain_name',          wl_gain_name, $
+                                    'bad_pixel_file',     wl_bad_pixel_file)
     END
     'ibis_nb' : BEGIN
         ; add the relative rotation between the narrowband and whitelight channels to 
@@ -251,7 +261,8 @@ CASE STRLOWCASE(instrument_channel) OF
                                     'dark_file',          nb_dark_cal_file, $
                                     'dark_name',          nb_dark_name, $
                                     'gain_file',          nb_gain_cal_file, $
-                                    'gain_name',          nb_gain_name)
+                                    'gain_name',          nb_gain_name, $
+				    'bad_pixel_file',     nb_bad_pixel_file)
     END
 ENDCASE
 
