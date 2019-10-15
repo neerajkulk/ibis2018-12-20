@@ -41,11 +41,11 @@ ENDELSE
     nb_6173_gain_cal_name = ['nb_gain_6173', '6173', 'nb_gain_info_6173']
 
     nb_7699_gain_cal_file = ['K7699.gain.blueshift.info.20181220_194457.sav', '7699']
-    nb_7699_gain_cal_name = ['nb_gain_7699', '7699', 'nb_gain_info_7699'
-]
+    nb_7699_gain_cal_name = ['nb_gain_7699', '7699', 'nb_gain_info_7699']
+
     nb_6563_gain_cal_file = ['Halpha.gain.blueshift.info.20181220_194457.sav', '6563']
-    nb_6563_gain_cal_name = ['nb_gain_6563', '6563', 'nb_gain_info_6563'
-]
+    nb_6563_gain_cal_name = ['nb_gain_6563', '6563', 'nb_gain_info_6563']
+
     nb_8542_gain_cal_file = ['Ca8542.gain.blueshift.info.20181220_161321.sav', '8542']
     nb_8542_gain_cal_name = ['nb_gain_8542', '8542', 'nb_gain_info_8542']
 
