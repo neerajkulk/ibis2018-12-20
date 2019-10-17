@@ -232,8 +232,6 @@ CASE STRLOWCASE(instrument_channel) OF
                                     'shift_even_scale',   shift_ibis_wl_even, $
                                     'optical_shift',      shift_wl_to_nb, $
                                     'hmi_pixel_cutout',   hmi_pixel_cutout, $
-                                    'nb_to_wl_destr_ref', rdisp_nb2wl, $
-                                    'nb_to_wl_destr_sft', disp_nb2wl, $
                                     'dark_file',          wl_dark_cal_file, $
                                     'dark_name',          wl_dark_name, $
                                     'gain_file',          wl_gain_cal_file, $
@@ -253,6 +251,8 @@ CASE STRLOWCASE(instrument_channel) OF
                                     'shift_even_scale',   shift_ibis_nb_even,$
                                     'optical_shift',      shift_target_nb, $
                                     'hmi_pixel_cutout',   hmi_pixel_cutout, $
+                                    'nb_to_wl_destr_ref', rdisp_nb2wl, $
+                                    'nb_to_wl_destr_sft', disp_nb2wl, $
                                     'wl_to_nb_drift',     wl_to_nb_drift, $
                                     'wl_drifts',          wl_optical_drifts, $
                                     'atm_dispersion',     atm_dispersion_nb, $
