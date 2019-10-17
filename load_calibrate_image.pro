@@ -185,8 +185,13 @@ bad_pixel_file_valid = FILE_TEST(bad_pixel_file)
 ; ----------------------------------------------------------------------
 
 ; restore identified calibration files
+
 IF verbose GE 2 THEN PRINT,'Restoring Dark Calibration File: ' + dark_file_use
+RESTORE,Verbose=restore_verbose,dark_file_use
+
+IF verbose GE 2 THEN PRINT,'Restoring Gain Calibration File: ' + gain_file_use
 RESTORE,Verbose=restore_verbose,gain_file_use
+
 
 ; set defined calibration array to a common name
 res = EXECUTE('dark_cal  = ' + dark_name[0])
