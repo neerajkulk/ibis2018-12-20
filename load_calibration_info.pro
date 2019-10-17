@@ -118,7 +118,7 @@ ENDELSE
     shift_target_8542 = [0.42895508,-1.45053, 8542 ]
     shift_target_6563 = [1.19836, -0.641968, 6563 ]
     shift_target_7699 = [2.142761, 1.323975, 7699 ]
-    shift_target_6173 = [1.17545, 0.454041, 6173 ]
+    shift_target_6173 = [0.812685, 0.454041, 6173 ]
     shift_target_nb   = [ [shift_target_6173], [shift_target_6563], [shift_target_7699], [shift_target_8542] ]
     
     ; optical shifts between narrowband reference wavelength and whitelight channel
