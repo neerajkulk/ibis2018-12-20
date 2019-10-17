@@ -38,13 +38,13 @@ ENDELSE
     nb_dark_name          = 'nb_darks'
 
     nb_6173_gain_cal_file = ['Fe6173.gain.blueshift.info.20181220_165244.sav', '6173']
-    nb_6173_gain_cal_name = ['nb_gain_6173', '6173', 'nb_gain_info_6173']
+    nb_6173_gain_cal_name = ['nb_gain_1652', '6173', 'nb_gain_info_1652']
 
     nb_7699_gain_cal_file = ['K7699.gain.blueshift.info.20181220_194457.sav', '7699']
     nb_7699_gain_cal_name = ['nb_gain_1944', '7699', 'nb_gain_info_1944']
 
     nb_6563_gain_cal_file = ['Halpha.gain.blueshift.info.20181220_194457.sav', '6563']
-    nb_6563_gain_cal_name = ['nb_gain_6563', '6563', 'nb_gain_info_6563']
+    nb_6563_gain_cal_name = ['nb_gain_1944', '6563', 'nb_gain_info_1944']
 
     nb_8542_gain_cal_file = ['Ca8542.gain.blueshift.info.20181220_161321.sav', '8542']
     nb_8542_gain_cal_name = ['nb_gain_8542', '8542', 'nb_gain_info_8542']
