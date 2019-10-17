@@ -88,7 +88,7 @@ ENDELSE
     
     scale_ibis_8542   = [0.09535, 0.09756, 8542]
     scale_ibis_6563   = [0.09522, 0.09747, 6563]
-    scale_ibis_7699   = [0.09533, 0.09674, 7699]
+    scale_ibis_7699   = [0.09533, 0.09742, 7699]
     scale_ibis_6173   = [0.09518, 0.09739, 6173]
     scale_ibis_nb     = [[scale_ibis_6173],[scale_ibis_6563],[scale_ibis_7699],[scale_ibis_8542]]
 
