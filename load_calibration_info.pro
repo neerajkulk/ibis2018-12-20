@@ -47,7 +47,7 @@ ENDELSE
     nb_6563_gain_cal_name = ['nb_gain_1944', '6563', 'nb_gain_info_1944']
 
     nb_8542_gain_cal_file = ['Ca8542.gain.blueshift.info.20181220_161321.sav', '8542']
-    nb_8542_gain_cal_name = ['nb_gain_8542', '8542', 'nb_gain_info_8542']
+    nb_8542_gain_cal_name = ['nb_gain_1613', '8542', 'nb_gain_info_1613']
 
     nb_gain_cal_file      = [[nb_6173_gain_cal_file], [nb_6563_gain_cal_file], [nb_7699_gain_cal_file], [nb_8542_gain_cal_file]]
     nb_gain_name          = [[nb_6173_gain_cal_name], [nb_6563_gain_cal_name], [nb_7699_gain_cal_name], [nb_8542_gain_cal_name]]
