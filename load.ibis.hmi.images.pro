@@ -17,7 +17,7 @@ load_nb        = 0
 ; ------------------------------------------------------------------
 ; determine which data is available and define what ranges to process
 ; ------------------------------------------------------------------
-wl_files     = file_search('/SMdata4/kreardon/IBIS/Dec2018/20Dec2018/ibis/whitelight/ScienceObservation/20181220_160454/','*fits')
+wl_files     = file_search('/SMdata4/kreardon/IBIS/Dec2018/20Dec2018/ibis/whitelight/ScienceObservation/20181220_145901/','*fits')
 ; there are extra spectral files, so we'll construct an array of matching narrowband
 ; files by simply changing the name of the leading directory
 dir_name_len = strlen('whitelight')
@@ -76,7 +76,7 @@ ENDIF
 ; ------------------------------------------------------------------
 ; again, assuming the (relative) path to the HMI data directory
 ;hmi_cont_cube_file = '../sdo/target/cubes/hmicont.fits'
-hmi_cont_cube_file  = '/SMdata1/nkulkarni/sdo_data/disk_center/target/level1/target/cubes/hmicont.fits'
+hmi_cont_cube_file  = '/SMdata1/nkulkarni/sdo_data/middle/target/cubes/hmicont.fits'
 hmiim_cube          = readfits(hmi_cont_cube_file, hmihdr, /Silent)
 
 ; the HMI data is stored as a 3-D data cube
@@ -179,7 +179,7 @@ FOR seqnum = seqstart,seqend DO BEGIN
 	wl_dstr_all[*,*,exten_cnt,seqnum] = wlim_destr
 
     ENDFOR
-    	SAVE,wl2hmi_sfts,disp_all,rdisp_all,wl_dstr_all,filename='wl.to.hmi.alignment.params.20Dec2018.sav'
+    	SAVE,wl2hmi_sfts,disp_all,rdisp_all,wl_dstr_all,filename='145901.wl.to.hmi.alignment.params.20Dec2018.sav'
 
 ENDFOR
 
