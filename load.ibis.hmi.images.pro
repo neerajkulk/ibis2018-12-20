@@ -102,9 +102,9 @@ FOR seqnum = seqstart,seqend DO BEGIN
     FOR exten_cnt = 0,num_exten-1 DO BEGIN
         exten = exten_cnt + exten_start
 	; assumes WL and NB calibrations are in a subdirectory 'calibrations/' of the current directory 
-	wlim     = load_calibrate_image(wl_files[seqnum],exten,'wl',header=wl_header,cal_dir='./calibrations/',verbose=load_verbosity, cal_info=cal_info_wl)
+	wlim     = load_calibrate_image(wl_files[seqnum],exten,'wl',header=wl_header, cal_info=cal_info_wl)
 	IF load_nb THEN BEGIN
-	    nbim7090 = load_calibrate_image(nb_files[seqnum],exten,'nb',header=nb_header,cal_dir='./calibrations/',verbose=load_verbosity, cal_info=cal_info_nb)
+	    nbim7090 = load_calibrate_image(nb_files[seqnum],exten,'nb',header=nb_header, cal_info=cal_info_nb)
 	ENDIF
 
 	extension_header_start = where(STRMATCH(wl_header,'*XTENSION=*'))
