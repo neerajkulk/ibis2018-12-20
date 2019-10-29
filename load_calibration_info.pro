@@ -201,7 +201,7 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
 
     ;Precalculated hmi_pixel cutouts for the 
     hmi_pixel_cutout        = FLTARR(1,5)
-    hmi_pixel_cutout[0,*]   = [31, 1030, 232, 1231, time_ref] 
+    hmi_pixel_cutout[0,*]   = [122, 1111, 150, 1149, time_ref] 
     ;hmi_pixel_cutout[0,*]    = [87, 246, 77, 236, time_ref]
     
     ; ---------- ROSA Corrections --------
