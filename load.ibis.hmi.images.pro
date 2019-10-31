@@ -35,6 +35,7 @@ seqstart = 0
 ; uncomment or change this to do more than one sequence
 seqend   = num_files - 1
 
+
 ; how many extensions for each file to process
 ; start at the first extensions (extensions are 1-indexed, not 0)
 exten_start      = 1
@@ -52,6 +53,8 @@ wl_dstr_all = FLTARR(1000,1000,num_exten,num_files) ; array to store the destret
 ; ------------------------------------------------------------------
 ; define output variables, if necessary
 ; ------------------------------------------------------------------
+define_variables = 1; set this so that arrays and kernels are initialized 
+
 IF define_variables THEN BEGIN
     IF N_ELEMENTS(wl2hmi_sfts) LE 2 * num_files THEN BEGIN
         wl2hmi_sfts = FLTARR(2,num_exten,num_files)
