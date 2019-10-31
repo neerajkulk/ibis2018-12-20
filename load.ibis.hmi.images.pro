@@ -182,8 +182,8 @@ FOR seqnum = seqstart,seqend DO BEGIN
 	wl_dstr_all[*,*,exten_cnt,seqnum] = wlim_destr
 
     ENDFOR
-    	SAVE,wl2hmi_sfts,disp_all,rdisp_all,wl_dstr_all,filename='145901.wl.to.hmi.alignment.params.20Dec2018.sav'
 
-ENDFOR
+ ENDFOR
+SAVE,wl2hmi_sfts,disp_all,rdisp_all,wl_dstr_all,filename='145901.wl.to.hmi.alignment.params.20Dec2018.sav'
 
 END
