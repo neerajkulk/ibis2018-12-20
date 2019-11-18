@@ -31,7 +31,7 @@ wl_files     = file_search('/SMdata4/kreardon/IBIS/Dec2018/20Dec2018/ibis/whitel
 ; there are extra spectral files, so we'll construct an array of matching narrowband
 ; files by simply changing the name of the leading directory
 dir_name_len = strlen('whitelight')
-nb_files     = 'spectral' + strmid(wl_files,dir_name_len,999)
+nb_files = file_search('/SMdata4/kreardon/IBIS/Dec2018/20Dec2018/ibis/spectral/ScienceObservation/20181220_145901/','*fits')
 num_files    = N_ELEMENTS(wl_files)
 
 wlszx = 1000 & wlmidx = wlszx/2.
@@ -44,7 +44,6 @@ seqstart = 0
 ;seqend   = 0
 ; uncomment or change this to do more than one sequence
 seqend   = num_files - 1
-
 
 ; how many extensions for each file to process
 ; start at the first extensions (extensions are 1-indexed, not 0)
