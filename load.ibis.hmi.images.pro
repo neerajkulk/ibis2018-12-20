@@ -5,14 +5,24 @@
 ;.r load_calibration_info.25Apr2019
 ; also, compile the destretch code before executing this the first time
 ; .r reg
+; .r reg_loop
 
 IF N_ELEMENTS(define_variables) EQ 0 THEN define_variables = 1
 
+verbose        = 1
 ; what level of verbosity to use when loading the IBIS images
 load_verbosity = 0
+
 ; sometime it may not be necessary to load the corresponding narrowband file
 ; and since it can take some time, we can skip it by setting this flag to zero
-load_nb        = 0
+load_nb        = 1
+
+; The total number of destretched images may be too large to hold in memory
+; since we could have tens of thousands of images at 4 MB each.
+; So in order to save the destretched arrays, we can write them out to a file. 
+; This involves opening a file, putting on a rudimentary FITS header, and then
+; dumping each destretched array into that file as it is processed.
+write_destr_arrays = 1
 
 ; ------------------------------------------------------------------
 ; determine which data is available and define what ranges to process
