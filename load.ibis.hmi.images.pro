@@ -52,30 +52,70 @@ exten_start      = 1
 ; see how many extensions there are in the files
 fits_open,wl_files[1],fcb
 max_exten        = fcb.nextend     ; should be 56 for the 25 April 2019 data
+fits_read,fcb,data,hdrorig_wl,exten=1,/header_only
 fits_close,fcb
 ; uncomment this (and change the value) if you want to do more than just the first extension
+num_exten        = max_exten
+wlpos            = 0
 
-num_exten       = max_exten
+; if we want to write out the destretched arrays, we will prepare the suitable FITS header and
+;     open the output files for writing.
+IF write_destr_arrays GE 1 THEN BEGIN
+    ; define the name of the output file(s)
+    filename_out_base = '.destr.all.20Dec2018.v1.fits'
+    wl_filename_out = 'whitelight' + filename_out_base
+    
+    ; This is a list of the FITS keywords we will copy from the original data files.
+    copykeywd = ['ORIGIN','TELESCOP','INSTRUME','CHANNEL','DETECTOR','FILEORIG','GAIN_PRE','WL_PRFLT','EXPTIME']
+    numkeywd  = N_ELEMENTS(copykeywd)
 
-wl_dstr_all = FLTARR(1000,1000,num_exten,num_files) ; array to store the destretched images
+    ; make a new FITS header of the size appropriate for the expected data array output
+    mkhdr,wlhdr_out,4,[wlszx,wlszy,max_exten,seqend-seqstart+1]
+    hdrlen = N_ELEMENTS(wlhdr)
+    FOR nn=0,numkeywd-1 DO sxaddpar,wlhdr_out,copykeywd[nn],sxpar(hdrorig_wl,copykeywd[nn]),before='COMMENT'
+    sxaddpar,wlhdr_out,'HISTORY','Destretched using load.ibis.hmi.images.pro on ' + SYSTIME(),before='COMMENT'
+    writefits,wl_filename_out,nulldata,wlhdr_out
+    OPENU,wllun,wl_filename_out,/swap_if_little_endian,/get_lun
+    point_lun,wllun,2880
+    point_lun,-wllun,wlpos
 
+    IF load_nb THEN BEGIN
+        nb_filename_out = 'narrowband' + filename_out_base
+
+        fits_open,nb_files[1],fcbnb
+        fits_read,fcbnb,data,hdrorig_nb,exten=1,/header_only
+        fits_close,fcbnb
+        mkhdr,nbhdr_out,4,[wlszx,wlszy,max_exten,seqend-seqstart+1]
+        FOR nn=0,numkeywd-1 DO sxaddpar,nbhdr_out,copykeywd[nn],sxpar(hdrorig_nb,copykeywd[nn]),before='COMMENT'
+        sxaddpar,nbhdr_out,'HISTORY','Destretched using load.ibis.hmi.images.pro on ' + SYSTIME(),before='COMMENT'
+        writefits,nb_filename_out,nulldata,nbhdr_out
+        OPENU,nblun,nb_filename_out,/swap_if_little_endian,/get_lun
+        point_lun,nblun,2880
+    ENDIF
+
+ENDIF
+        
 ; ------------------------------------------------------------------
 ; define output variables, if necessary
 ; ------------------------------------------------------------------
-define_variables = 1; set this so that arrays and kernels are initialized 
-
 IF define_variables THEN BEGIN
+    IF verbose GE 1 THEN PRINT,'Defining Variables'
     IF N_ELEMENTS(wl2hmi_sfts) LE 2 * num_files THEN BEGIN
         wl2hmi_sfts = FLTARR(2,num_exten,num_files)
     ENDIF
 
     ; how big of a kernel to use for destretching
-    destretch_kernel = BYTARR(16,16)
+    destretch_kernel = BYTARR(32,32)
+    destretch_kernel = [64,32,16]
     ; do a test destretch so we can determine how big the grid of destretch vectors will be
-    test_destr = reg(fltarr(wlszx,wlszy),fltarr(wlszx,wlszy),destretch_kernel, rdisp=rdispout, disp=dispout)
+    ;test_destr = reg(fltarr(wlszx,wlszy),  fltarr(wlszx,wlszy),  destretch_kernel, rdisp=rdispout, disp=dispout)
+    test_destr = reg_loop(fltarr(wlszx,wlszy),fltarr(wlszx,wlszy), destretch_kernel, rdisp=rdispout, disp=dispout)
     disp_sz    = SIZE(dispout)
     disp_all   = FLTARR(disp_sz[1],disp_sz[2],disp_sz[3],num_exten, num_files)
     rdisp_all  = disp_all
+    
+    wlim_destr = FLTARR(1000,1000,num_exten)
+    IF load_nb THEN nbim_destr = FLTARR(1000,1000,num_exten)
     
     ; shouldn't have to revisit this block after the first execution
     ; but if you do need to, just set define_variables = 1 from the command line 
@@ -88,6 +128,7 @@ ENDIF
 ; ------------------------------------------------------------------
 ; again, assuming the (relative) path to the HMI data directory
 ;hmi_cont_cube_file = '../sdo/target/cubes/hmicont.fits'
+
 hmi_cont_cube_file  = '/SMdata1/nkulkarni/sdo_data/middle/target/cubes/hmicont.fits'
 hmiim_cube          = readfits(hmi_cont_cube_file, hmihdr, /Silent)
 
@@ -107,16 +148,16 @@ hmi_image_scale      = sxpar(hmihdr,'CDELT1')
 ; ------------------------------------------------------------------
 
 FOR seqnum = seqstart,seqend DO BEGIN
-    IF num_exten EQ max_exten THEN PRINT,systime(),seqnum,' - ',wl_files[seqnum] $ 
+    IF num_exten EQ max_exten THEN PRINT,systime(),seqnum,' - ',wl_files[seqnum],' - ',wlpos $ 
     ELSE IF (seqnum MOD 50) EQ 0 THEN PRINT,systime(),seqnum
     ;seqnum = 100
     
     FOR exten_cnt = 0,num_exten-1 DO BEGIN
         exten = exten_cnt + exten_start
 	; assumes WL and NB calibrations are in a subdirectory 'calibrations/' of the current directory 
-	wlim     = load_calibrate_image(wl_files[seqnum],exten,'wl',header=wl_header, cal_info=cal_info_wl)
+	wlim     = load_calibrate_image(wl_files[seqnum],exten,'wl',header=wl_header,cal_dir='./calibrations/',verbose=load_verbosity, cal_info=cal_info_wl)
 	IF load_nb THEN BEGIN
-	    nbim7090 = load_calibrate_image(nb_files[seqnum],exten,'nb',header=nb_header, cal_info=cal_info_nb)
+	    nbim = load_calibrate_image(nb_files[seqnum],exten,'nb',header=nb_header,cal_dir='./calibrations/',verbose=load_verbosity, cal_info=cal_info_nb, apply_dist=1)
 	ENDIF
 
 	extension_header_start = where(STRMATCH(wl_header,'*XTENSION=*'))
@@ -129,7 +170,9 @@ FOR seqnum = seqstart,seqend DO BEGIN
 
 	; again, assuming the (relative) path to the HMI data directory
 	;hmi_cont_cube_file = '../sdo/target/cubes/hmicont.fits'
-	hmi_cont_cube_file = '/SMdata1/nkulkarni/sdo_data/disk_center/target/level1/target/cubes/hmicont.fits'
+
+        hmi_cont_cube_file  = '/SMdata1/kreardon/IBIS/Apr2019/25Apr2019/sdo/target/cubes/hmicont.fits'
+
 	hmiim = readfits(hmi_cont_cube_file,nslice=0,hmihdr,/Silent)
 
 	; the HMI data is stored as a 3-D data cube
@@ -166,7 +209,7 @@ FOR seqnum = seqstart,seqend DO BEGIN
 	; determine number of pixels for scaled up image
 	; need to know target IBIS plate scale = 0.096 arcsec/pixel
 	hmiim_ibis_pix = ROUND(hmiim_size[1:2] * hmi_image_scale / 0.096)
-	hmi_ibisscl     = CONGRID(hmiim,hmiim_ibis_pix[0],hmiim_ibis_pix[1], CUBIC=-0.5)
+	hmi_ibisscl     = CONGRID(hmiim, hmiim_ibis_pix[0], hmiim_ibis_pix[1], CUBIC=-0.5)
 	
 	; now cut down HMI image to the same number of pixels as the IBIS data, 
 	; with a window that is approximately centered on the average IBIS field of view
@@ -179,20 +222,45 @@ FOR seqnum = seqstart,seqend DO BEGIN
 
 	; calculate destretch vectors
         ; before destretching, take out the bulk shifts since they might confuse the destretching if
-        ; the a comparable to or greater than the size of the subfield/kernel
-        ; two options to shift images 
-        ;     - the first (SHIFT) causes the image to wrap around, which may be bad when destretching
-        ;     - the second (ROT) properly fills the unknown borders with the array mean
+        ; they are comparable to or greater than the size of the subfield/kernel.
+        ; There are two options to shift images 
+        ;     - the first (SHIFT) is simple but causes the image to wrap around, which may be bad when destretching
+        ;     - the second (ROT) instead properly fills the unknown borders with the array mean
 	;wlim_sft = SHIFT(wlim,ROUND(wl_sft[0]), ROUND(wl_sft[1]))
-	wlim_sft = ROT(wlim,0,1.0,wlmidx-ROUND(wl_sft[0]),wlmidy-ROUND(wl_sft[1]),missing=MEAN(wlim))
-	wlim_destr = reg(wlim_sft, hmi_ibisscl, bytarr(16,16), rdisp=rdispout, disp=dispout)
+	wlim_sft                          = ROT(wlim,0,1.0,wlmidx-ROUND(wl_sft[0]),wlmidy-ROUND(wl_sft[1]),missing=MEAN(wlim))
+	;wlim_destr[*,*,exten_cnt]         = reg(wlim_sft, hmi_ibisscl, bytarr(32,32), rdisp=rdispout, disp=dispout)
+	wlim_destr[*,*,exten_cnt]         = reg_loop(wlim_sft, hmi_ibisscl, destretch_kernel, rdisp=rdispout, disp=dispout)
+	
 	disp_all[*,*,*,exten_cnt,seqnum]  = dispout
 	rdisp_all[*,*,*,exten_cnt,seqnum] = rdispout
-	wl_dstr_all[*,*,exten_cnt,seqnum] = wlim_destr
+
+
+	IF load_nb THEN BEGIN
+            nbim_sft                          = ROT(nbim,0,1.0,wlmidx-ROUND(wl_sft[0]),wlmidy-ROUND(wl_sft[1]),missing=MEAN(nbim))
+            nbim_destr[*,*,exten_cnt]         = doreg(nbim_sft, rdispout, dispout)
+        ENDIF
 
     ENDFOR
+    
+    ; if requested dump the destretched array(s) into the FITS file as raw values
+    IF write_destr_arrays GE 1 THEN BEGIN
+        WRITEU,wllun,wlim_destr
+        IF load_nb THEN WRITEU,nblun,nbim_destr
+    ENDIF
+    
+    ;STOP
+    FLUSH,wllun,nblun
+    point_lun,-wllun,wlpos
+    point_lun,-nblun,nbpos
+    ;print,wlpos,nbpos
+    
+    IF ((seqnum+1) MOD 50) EQ 0 THEN BEGIN
+        SAVE,wl2hmi_sfts,disp_all,rdisp_all,filename='wl.to.hmi.alignment.params.20Dec2018.level2.sav'
+    ENDIF
 
- ENDFOR
-SAVE,wl2hmi_sfts,disp_all,rdisp_all,wl_dstr_all,filename='145901.wl.to.hmi.alignment.params.20Dec2018.sav'
+ENDFOR
+
+; we are done writing so close any of the destretched array output files that were open
+IF write_destr_arrays GE 1 THEN FREE_LUN,wllun,nblun
 
 END
