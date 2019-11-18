@@ -170,10 +170,9 @@ FOR seqnum = seqstart,seqend DO BEGIN
 
 	; again, assuming the (relative) path to the HMI data directory
 	;hmi_cont_cube_file = '../sdo/target/cubes/hmicont.fits'
-
-        hmi_cont_cube_file  = '/SMdata1/kreardon/IBIS/Apr2019/25Apr2019/sdo/target/cubes/hmicont.fits'
-
-	hmiim = readfits(hmi_cont_cube_file,nslice=0,hmihdr,/Silent)
+        hmi_cont_cube_file = '/SMdata1/nkulkarni/sdo_data/middle/target/cubes/hmicont.fits'
+        
+        hmiim = readfits(hmi_cont_cube_file,nslice=0,hmihdr,/Silent)
 
 	; the HMI data is stored as a 3-D data cube
 	; we need to find out which image in that cube corresponds to the image/sequence loaded above
