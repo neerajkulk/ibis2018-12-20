@@ -63,7 +63,7 @@ wlpos            = 0
 IF write_destr_arrays GE 1 THEN BEGIN
     ; define the name of the output file(s)
     filename_out_base = '.destr.all.20Dec2018.v1.fits'
-    wl_filename_out = 'whitelight' + filename_out_base
+    wl_filename_out = '/SMdata1/nkulkarni/destretching/whitelight' + filename_out_base
     
     ; This is a list of the FITS keywords we will copy from the original data files.
     copykeywd = ['ORIGIN','TELESCOP','INSTRUME','CHANNEL','DETECTOR','FILEORIG','GAIN_PRE','WL_PRFLT','EXPTIME']
@@ -80,7 +80,7 @@ IF write_destr_arrays GE 1 THEN BEGIN
     point_lun,-wllun,wlpos
 
     IF load_nb THEN BEGIN
-        nb_filename_out = 'narrowband' + filename_out_base
+        nb_filename_out = '/SMdata1/nkulkarni/destretching/narrowband' + filename_out_base
 
         fits_open,nb_files[1],fcbnb
         fits_read,fcbnb,data,hdrorig_nb,exten=1,/header_only
