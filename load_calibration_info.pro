@@ -131,7 +131,7 @@ ENDELSE
 
 
 IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) THEN BEGIN
-	vects_in    = read_ascii(calibration_location + '/destr.components.nb2wl.new.v2.txt',type='float',record_start=0,data_start=1)
+	vects_in    = read_ascii(calibration_location + '/destr.components.nb2wl.new.v2.txt',type='float',record_start=0,data_start=0)
 	disp_nb2wl  = reform(vects_in.field1[2:3,*],2,49,49)
 	rdisp_nb2wl = reform(vects_in.field1[0:1,*],2,49,49)
     ENDIF ELSE BEGIN
@@ -142,20 +142,20 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
 
 
     ; define which filters were in the wheel for a given observing day, and which filters were used
-    filter_ids              = ['', '8542', '7773', '6563', '', '7699', '7090', '5876']
+    ;filter_ids              = ['', '8542', '7773', '6563', '', '7699', '7090', '5876']
+    filter_ids              = ['', '8542', '6302', '6563', '', '7699', '5896', '6173']
     ;filters_used           = [1,3,6,7]   ; filter wheel order
-    filters_used            = [6,3,1,7]   ; wavelength sampling order  @ TODO: i might have to change this.
+    ;filters_used            = [6,3,1,7]   ; wavelength sampling order  @ TODO: i might have to change this.
+    filters_used            = [1,3,5,7]   ; proper order for most 20 Dec 2018 series
     num_filters             = N_ELEMENTS(filters_used)
 ; this is a placeholder for the future definition of the time-dependent offsets between wavelengths due to
     ; atmospheric dispersion or time-dependent changes in the offset between whitelight and narrowband channels
     
-    num_timesteps           = 300
-    wl_to_nb_drift          = DBLARR(4,num_timesteps,num_filters) + 1
     wl_optical_drifts       = FLTARR(2,num_timesteps) + 1
     
-
     ; this is a placeholder for the future definition of the time-dependent offsets between wavelengths due to
     ; atmospheric dispersion or time-dependent changes in the offset between whitelight and narrowband channels
+    num_timesteps           = 300
     ;wl_to_nb_drift          = DBLARR(4,num_timesteps,num_filters) + 1
     wl_to_nb_drift          = [0,0]
     wl_to_nb_drift          = REFORM(wl_to_nb_drift, 2, 1)
@@ -166,33 +166,37 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
         IF FILE_TEST(atm_dispersion_file,/Read) THEN BEGIN
             RESTORE,Verbose=0,atm_dispersion_file
             ; provides ATM_DISP_CALC and SEQUENCE_TIMES
+	    num_atm_disp_steps = n_elements(atm_disp_calc.times_jd)
+            num_atm_disp_waves = n_elements(atm_disp_calc.wavelengths)
 
             ; pull out refraction values decomposed into x- and y-shifts (in solar heliocent ric coordinates)
-            dispcalc_sfts       = [REFORM(atm_disp_calc.SFTS_HELIOCENT_EW,1,1080,5),REFORM(atm_disp_calc.SFTS_HELIOCENT_NS,1,1080,5)]
+            dispcalc_sfts       = [REFORM(atm_disp_calc.SFTS_HELIOCENT_EW,1,num_atm_disp_steps,num_atm_disp_waves),$
+                                   REFORM(atm_disp_calc.SFTS_HELIOCENT_NS,1,num_atm_disp_steps,num_atm_disp_waves)]
             dispcalc_sfts_size  = SIZE(dispcalc_sfts)
-            num_timesteps       = dispcalc_sfts_size[2]
             ; ATM_DISP_CALC.times_jd also stores the times for the calculated refraction
             atm_dispersion_times = sequence_times
 
             ; take difference between the refraction at the wavelengths of the whitelight im age
             ; and the refraction at each narrowband wavelength to get theoretical dispersion offsets 
             ; between each of the channels/filters
-            ; the atmospheric dispersion values are stored in increasing wavelength order - [5434,7090,7200,7699]
-            ; 7200 (index 2) is the wavelength of the whitelight images, so all the shifts 
+            ; the atmospheric dispersion values are stored in increasing wavelength order - [6173, 6563, 6800, 7699, 8542]
+            ; 6800 (index 2) is the wavelength of the whitelight images, so all the shifts 
             ; are differenced with respect to that wavelength
             atm_dispersion_nb            = FLTARR(3,num_timesteps,num_filters)
-            atm_dispersion_nb[2,*,0]     = atm_disp_calc.wavelengths[1]*10
-            atm_dispersion_nb[2,*,1]     = atm_disp_calc.wavelengths[3]*10
-            atm_dispersion_nb[2,*,2]     = atm_disp_calc.wavelengths[0]*10
-            atm_dispersion_nb[0:1,*,0,0] = dispcalc_sfts[*,*,2] - dispcalc_sfts[*,*,1]
-            atm_dispersion_nb[0:1,*,1,0] = dispcalc_sfts[*,*,2] - dispcalc_sfts[*,*,3]
-            atm_dispersion_nb[0:1,*,2,0] = dispcalc_sfts[*,*,2] - dispcalc_sfts[*,*,0]
+            atm_dispersion_nb[2,*,0]     = atm_disp_calc.wavelengths[4]*10
+            atm_dispersion_nb[2,*,1]     = atm_disp_calc.wavelengths[1]*10
+            atm_dispersion_nb[2,*,2]     = atm_disp_calc.wavelengths[3]*10
+            atm_dispersion_nb[2,*,3]     = atm_disp_calc.wavelengths[0]*10
+	    atm_dispersion_nb[0:1,*,0] = dispcalc_sfts[*,*,wl_wave_idx] - dispcalc_sfts[*,*,4]
+            atm_dispersion_nb[0:1,*,1] = dispcalc_sfts[*,*,wl_wave_idx] - dispcalc_sfts[*,*,1]
+            atm_dispersion_nb[0:1,*,2] = dispcalc_sfts[*,*,wl_wave_idx] - dispcalc_sfts[*,*,3]
+            atm_dispersion_nb[0:1,*,3] = dispcalc_sfts[*,*,wl_wave_idx] - dispcalc_sfts[*,*,0]
         ENDIF ELSE BEGIN
-            num_timesteps              = 300
+	    ; if no atmospheric dispersion calculation is available, create dummy arrays with zero shifts
             atm_dispersion_nb          = FLTARR(3,2,num_filters)
             FOR filtn = 0,num_filters-1 DO BEGIN & 
                 atm_dispersion_nb[2,*,filtn] = FLOAT(filter_ids[filters_used[filtn]]) & 
-                ENDFOR
+            ENDFOR
             atm_dispersion_times       = [time_ref, time_ref+1]
         ENDELSE
         wl_optical_drifts       = FLTARR(2,num_timesteps)
