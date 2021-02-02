@@ -136,7 +136,7 @@ ENDELSE
 
 
 IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) THEN BEGIN
-	vects_in    = read_ascii(calibration_location + '/destr.components.nb2wl.new.v2.txt',type='float',record_start=0,data_start=0)
+	vects_in    = read_ascii(calibration_location + '/destr.components.nb2wl.new.v2.txt',type='float',record_start=0,data_start=1)
 	disp_nb2wl  = reform(vects_in.field1[2:3,*],2,49,49)
 	rdisp_nb2wl = reform(vects_in.field1[0:1,*],2,49,49)
     ENDIF ELSE BEGIN
