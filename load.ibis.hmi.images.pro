@@ -27,11 +27,11 @@ write_destr_arrays = 1
 ; ------------------------------------------------------------------
 ; determine which data is available and define what ranges to process
 ; ------------------------------------------------------------------
-wl_files     = file_search('/SMdata4/kreardon/IBIS/Dec2018/20Dec2018/ibis/whitelight/ScienceObservation/20181220_145901/','*fits')
+wl_files     = file_search('/net/ss2/export/kreardon/IBIS/Dec2018/20Dec2018/ibis/whitelight/ScienceObservation/20181220_172517/','*fits')
 ; there are extra spectral files, so we'll construct an array of matching narrowband
 ; files by simply changing the name of the leading directory
 dir_name_len = strlen('whitelight')
-nb_files = file_search('/SMdata4/kreardon/IBIS/Dec2018/20Dec2018/ibis/spectral/ScienceObservation/20181220_145901/','*fits')
+nb_files = file_search('/net/ss2/export/kreardon/IBIS/Dec2018/20Dec2018/ibis/whitelight/ScienceObservation/20181220_172517/','*fits')
 num_files    = N_ELEMENTS(wl_files)
 
 wlszx = 1000 & wlmidx = wlszx/2.
@@ -254,7 +254,7 @@ FOR seqnum = seqstart,seqend DO BEGIN
     ;print,wlpos,nbpos
     
     IF ((seqnum+1) MOD 50) EQ 0 THEN BEGIN
-        SAVE,wl2hmi_sfts,disp_all,rdisp_all,filename='wl.to.hmi.alignment.params.20Dec2018.level2.sav'
+        SAVE,wl2hmi_sfts,disp_all,rdisp_all,filename='172517.wl.to.hmi.alignment.params.20Dec2018.level2sav'
     ENDIF
 
 ENDFOR
