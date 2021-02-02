@@ -155,12 +155,11 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
     num_filters             = N_ELEMENTS(filters_used)
 ; this is a placeholder for the future definition of the time-dependent offsets between wavelengths due to
     ; atmospheric dispersion or time-dependent changes in the offset between whitelight and narrowband channels
-    
+    num_timesteps           = 300                            
     wl_optical_drifts       = FLTARR(2,num_timesteps) + 1
     
     ; this is a placeholder for the future definition of the time-dependent offsets between wavelengths due to
     ; atmospheric dispersion or time-dependent changes in the offset between whitelight and narrowband channels
-    num_timesteps           = 300
     ;wl_to_nb_drift          = DBLARR(4,num_timesteps,num_filters) + 1
     wl_to_nb_drift          = [0,0]
     wl_to_nb_drift          = REFORM(wl_to_nb_drift, 2, 1)
