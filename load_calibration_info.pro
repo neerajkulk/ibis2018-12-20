@@ -14,6 +14,11 @@ ibis_nb_transpose    =  7
 ; this is a "standard" value which was adopted but could be changed
 target_plate_scale   = 0.096
 
+; wavelength of whitelight filter - should be defined in the 'WL_PRFLT' keyword in the 
+;    primary header of the FITS files, but should be constant for an observing day, or
+;    even over a full observing run.
+wl_filter_wave     = 6800.
+
 ; look for a "calibration_files" directory as a subdirectory of the directory
 ; where this program is found
 
@@ -168,6 +173,7 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
             ; provides ATM_DISP_CALC and SEQUENCE_TIMES
 	    num_atm_disp_steps = n_elements(atm_disp_calc.times_jd)
             num_atm_disp_waves = n_elements(atm_disp_calc.wavelengths)
+	    wl_wave_idx        = get_closest(atm_disp_calc.wavelengths, wl_filter_wave/10.)
 
             ; pull out refraction values decomposed into x- and y-shifts (in solar heliocent ric coordinates)
             dispcalc_sfts       = [REFORM(atm_disp_calc.SFTS_HELIOCENT_EW,1,num_atm_disp_steps,num_atm_disp_waves),$
@@ -240,6 +246,7 @@ CASE STRLOWCASE(instrument_channel) OF
                                     'dark_name',          wl_dark_name, $
                                     'gain_file',          wl_gain_cal_file, $
                                     'gain_name',          wl_gain_name, $
+				    'wl_filter_wave',     wl_filter_wave, $
                                     'bad_pixel_file',     wl_bad_pixel_file)
     END
     'ibis_nb' : BEGIN
