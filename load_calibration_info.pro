@@ -153,10 +153,6 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
     ;filters_used            = [6,3,1,7]   ; wavelength sampling order  @ TODO: i might have to change this.
     filters_used            = [1,3,5,7]   ; proper order for most 20 Dec 2018 series
     num_filters             = N_ELEMENTS(filters_used)
-; this is a placeholder for the future definition of the time-dependent offsets between wavelengths due to
-    ; atmospheric dispersion or time-dependent changes in the offset between whitelight and narrowband channels
-    num_timesteps           = 300                            
-    wl_optical_drifts       = FLTARR(2,num_timesteps) + 1
     
     ; this is a placeholder for the future definition of the time-dependent offsets between wavelengths due to
     ; atmospheric dispersion or time-dependent changes in the offset between whitelight and narrowband channels
@@ -170,13 +166,15 @@ IF FILE_TEST(calibration_location + 'destr.components.nb2wl.new.v2.txt',/Read) T
         IF FILE_TEST(atm_dispersion_file,/Read) THEN BEGIN
             RESTORE,Verbose=0,atm_dispersion_file
             ; provides ATM_DISP_CALC and SEQUENCE_TIMES
-	    num_atm_disp_steps = n_elements(atm_disp_calc.times_jd)
+	    
+	    ; determine the number of time steps and wavelengths in the atmospheric dispersion calculation
+	    num_timesteps      = n_elements(atm_disp_calc.times_jd)
             num_atm_disp_waves = n_elements(atm_disp_calc.wavelengths)
 	    wl_wave_idx        = get_closest(atm_disp_calc.wavelengths, wl_filter_wave/10.)
 
             ; pull out refraction values decomposed into x- and y-shifts (in solar heliocent ric coordinates)
-            dispcalc_sfts       = [REFORM(atm_disp_calc.SFTS_HELIOCENT_EW,1,num_atm_disp_steps,num_atm_disp_waves),$
-                                   REFORM(atm_disp_calc.SFTS_HELIOCENT_NS,1,num_atm_disp_steps,num_atm_disp_waves)]
+            dispcalc_sfts       = [REFORM(atm_disp_calc.SFTS_HELIOCENT_EW,1,num_timesteps,num_atm_disp_waves),$
+                                   REFORM(atm_disp_calc.SFTS_HELIOCENT_NS,1,num_timesteps,num_atm_disp_waves)]
             dispcalc_sfts_size  = SIZE(dispcalc_sfts)
             ; ATM_DISP_CALC.times_jd also stores the times for the calculated refraction
             atm_dispersion_times = sequence_times
