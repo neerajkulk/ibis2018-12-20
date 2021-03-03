@@ -31,7 +31,7 @@ wl_files     = file_search('/net/ss2/export/kreardon/IBIS/Dec2018/20Dec2018/ibis
 ; there are extra spectral files, so we'll construct an array of matching narrowband
 ; files by simply changing the name of the leading directory
 dir_name_len = strlen('whitelight')
-nb_files = file_search('/net/ss2/export/kreardon/IBIS/Dec2018/20Dec2018/ibis/whitelight/ScienceObservation/20181220_172517/','*fits')
+nb_files = file_search('/net/ss2/export/kreardon/IBIS/Dec2018/20Dec2018/ibis/spectral/ScienceObservation/20181220_172517/','*fits')
 num_files    = N_ELEMENTS(wl_files)
 
 wlszx = 1000 & wlmidx = wlszx/2.
